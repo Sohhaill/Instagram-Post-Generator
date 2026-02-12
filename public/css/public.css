@@ -1,0 +1,70 @@
+.ipg-wrapper {
+    max-width: 650px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.08);
+    font-family: "Inter", Arial, sans-serif;
+}
+
+.ipg-title {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #333;
+}
+
+.ipg-field {
+    margin-bottom: 22px;
+}
+
+.ipg-field label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #444;
+}
+
+.ipg-field select,
+.ipg-field textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    background: #fafafa;
+    transition: 0.2s;
+}
+
+.ipg-field select:focus,
+.ipg-field textarea:focus {
+    border-color: #4c8bf5;
+    background: #fff;
+}
+
+.ipg-checkboxes label,
+.ipg-radio label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.ipg-btn {
+    width: 100%;
+    padding: 14px;
+    background: #4c8bf5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.ipg-btn:hover {
+    background: #326ddf;
+}
