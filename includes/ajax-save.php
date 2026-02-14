@@ -1,7 +1,6 @@
 <?php
 
 if ( ! defined('ABSPATH') ) exit;
-require_once plugin_dir_path(__FILE__) . 'excel-functions.php';
 
 add_action("wp_ajax_ipg_save_user_request", "ipg_save_user_request");
 add_action("wp_ajax_nopriv_ipg_save_user_request", "ipg_save_user_request");
@@ -40,20 +39,8 @@ function ipg_save_user_request() {
         'no_of_posts' => $no_posts
     ]);
 
-    $entry_id = $wpdb->insert_id;
-
-    // 2. APPEND TO EXCEL SHEET
-    ipg_append_to_excel([
-        $user->user_login,
-        $user->user_email,
-        $category,
-        implode(", ", json_decode($styles)),
-        $notes,
-        current_time("mysql"),
-        "Free",
-        "Pending",
-        $entry_id
-    ]);
+    // REMOVE THIS → it causes the error
+    // ipg_append_to_excel([...]);
 
     wp_send_json_success([
         "message" => "Your request was submitted successfully."
