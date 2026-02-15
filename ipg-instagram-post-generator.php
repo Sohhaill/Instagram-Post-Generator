@@ -50,6 +50,7 @@ function ipg_enqueue_public_js() {
     ]);
 }
 add_action( 'wp_enqueue_scripts', 'ipg_enqueue_public_js' );
+add_action('admin_enqueue_scripts', 'ipg_enqueue_public_js'); 
 
 
 /* ---------------------------
@@ -70,20 +71,3 @@ function ipg_enqueue_public_assets() {
 add_action( 'wp_enqueue_scripts', 'ipg_enqueue_public_assets' );
 
 
-function ipg_admin_scripts($hook) {
-    if ($hook !== 'toplevel_page_ipg-admin') return;
-
-    wp_enqueue_script(
-        'ipg-admin-js',
-        plugin_dir_url(__FILE__) . '/admin/js/admin.js',
-        ['jquery'],
-        false,
-        true
-    );
-
-    wp_localize_script('ipg-admin-js', 'ipg_admin_ajax', [
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ipg_admin_nonce')
-    ]);
-}
-add_action("admin_enqueue_scripts", "ipg_admin_scripts");
