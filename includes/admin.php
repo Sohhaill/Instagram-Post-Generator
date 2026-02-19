@@ -112,36 +112,68 @@ function ipg_admin_main_page() {
         </table>
         <div id="ipg-prompt-editor" style="display:none; margin-top:30px; padding:20px; border:1px solid #ddd; background:#fff;">
 
-    <h2>Edit Prompt & Generate Image</h2>
+   <h2>Edit Prompt & Generate Image</h2>
 
-    <table class="form-table">
-        <tr>
-            <th>User</th>
-            <td id="ipg-pe-user"></td>
-        </tr>
-        <tr>
-            <th>Email</th>
-            <td id="ipg-pe-email"></td>
-        </tr>
-        <tr>
-            <th>Category</th>
-            <td id="ipg-pe-category"></td>
-        </tr>
-        <tr>
-            <th>Styles</th>
-            <td id="ipg-pe-styles"></td>
-        </tr>
-        <tr>
-            <th>Admin Prompt</th>
-            <td>
-                <textarea id="ipg-pe-prompt" style="width:100%; height:80px;"></textarea>
-            </td>
-        </tr>
-    </table>
+<table class="form-table">
+    <tr>
+        <th>User</th>
+        <td id="ipg-pe-user"></td>
+    </tr>
+    <tr>
+        <th>Email</th>
+        <td id="ipg-pe-email"></td>
+    </tr>
+    <tr>
+        <th>Category</th>
+        <td id="ipg-pe-category"></td>
+    </tr>
+    <tr>
+        <th>Styles</th>
+        <td id="ipg-pe-styles"></td>
+    </tr>
 
-    <button class="button button-primary" id="ipg-generate-image-btn">Generate Image</button>
+    <!-- IMAGE 1 PROMPT -->
+    <tr>
+        <th>Image 1 Prompt</th>
+        <td>
+            <textarea id="ipg-pe-prompt1" style="width:100%; height:80px;" placeholder="Write prompt for image 1..."></textarea>
+            <button class="button button-primary" id="ipg-generate-image1-btn" style="margin-top:8px;">
+                Generate Image 1
+            </button>
+            <span id="ipg-spinner1" style="display:none;">
+                <span class="spinner is-active" style="float:none;vertical-align:middle;"></span> Generating...
+            </span>
+        </td>
+    </tr>
 
-    <div id="ipg-generated-img" style="margin-top:20px;"></div>
+    <!-- IMAGE 1 RESULT -->
+    <tr id="ipg-image1-result-row" style="display:none;">
+        <th>Image 1</th>
+        <td id="ipg-image1-result"></td>
+    </tr>
+
+    <!-- IMAGE 2 PROMPT — hidden until image 1 is done -->
+    <tr id="ipg-prompt2-row" style="display:none;">
+        <th>Image 2 Prompt</th>
+        <td>
+            <textarea id="ipg-pe-prompt2" style="width:100%; height:80px;" placeholder="Write prompt for image 2..."></textarea>
+            <button class="button button-primary" id="ipg-generate-image2-btn" style="margin-top:8px;">
+                Generate Image 2
+            </button>
+            <span id="ipg-spinner2" style="display:none;">
+                <span class="spinner is-active" style="float:none;vertical-align:middle;"></span> Generating...
+            </span>
+        </td>
+    </tr>
+
+    <!-- IMAGE 2 RESULT -->
+    <tr id="ipg-image2-result-row" style="display:none;">
+        <th>Image 2</th>
+        <td id="ipg-image2-result"></td>
+    </tr>
+
+</table>
+
 </div>
     </div>
 
@@ -201,6 +233,126 @@ function ipg_admin_settings_page() {
     </div>
 
     <?php
+}
+
+// ── IMAGE 1 HANDLER ─────────────────────────────────────────────────────────
+function ipg_generate_image1_handler() {
+
+    check_ajax_referer('ipg_ajax_nonce', 'nonce');
+
+    if ( empty($_POST['prompt']) ) {
+        wp_send_json_error(['message' => 'Prompt is required.']);
+    }
+
+    $prompt  = sanitize_text_field($_POST['prompt']);
+    $id      = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $api_key = get_option('ipg_chatgpt_api_key', '');
+
+    if ( empty($api_key) ) {
+        wp_send_json_error(['message' => 'API key is missing.']);
+    }
+    if ( $id <= 0 ) {
+        wp_send_json_error(['message' => 'Invalid request ID.']);
+    }
+
+    $result = ipg_call_dalle($prompt, $api_key);
+
+    if ( isset($result['error']) ) {
+        wp_send_json_error(['message' => $result['error']]);
+    }
+
+    // Save image 1 URL + prompt to DB
+    global $wpdb;
+    $wpdb->update(
+        $wpdb->prefix . 'ipg_requests',
+        [
+            'first_image_url' => $result['url'],
+            'admin_prompt'    => $prompt,
+        ],
+        ['id' => $id],
+        ['%s', '%s'],
+        ['%d']
+    );
+
+    wp_send_json_success(['image_url' => $result['url']]);
+}
+add_action('wp_ajax_ipg_generate_image1', 'ipg_generate_image1_handler');
+
+
+// ── IMAGE 2 HANDLER ─────────────────────────────────────────────────────────
+function ipg_generate_image2_handler() {
+
+    check_ajax_referer('ipg_ajax_nonce', 'nonce');
+
+    if ( empty($_POST['prompt']) ) {
+        wp_send_json_error(['message' => 'Prompt is required.']);
+    }
+
+    $prompt  = sanitize_text_field($_POST['prompt']);
+    $id      = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $api_key = get_option('ipg_chatgpt_api_key', '');
+
+    if ( empty($api_key) ) {
+        wp_send_json_error(['message' => 'API key is missing.']);
+    }
+    if ( $id <= 0 ) {
+        wp_send_json_error(['message' => 'Invalid request ID.']);
+    }
+
+    $result = ipg_call_dalle($prompt, $api_key);
+
+    if ( isset($result['error']) ) {
+        wp_send_json_error(['message' => $result['error']]);
+    }
+
+    // Save image 2 URL to DB
+    global $wpdb;
+    $wpdb->update(
+        $wpdb->prefix . 'ipg_requests',
+        ['second_image_url' => $result['url']],
+        ['id' => $id],
+        ['%s'],
+        ['%d']
+    );
+
+    wp_send_json_success(['image_url' => $result['url']]);
+}
+add_action('wp_ajax_ipg_generate_image2', 'ipg_generate_image2_handler');
+
+
+// ── SHARED DALL·E HELPER ────────────────────────────────────────────────────
+function ipg_call_dalle( $prompt, $api_key ) {
+
+    $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
+        'timeout' => 60,
+        'headers' => [
+            'Authorization' => 'Bearer ' . $api_key,
+            'Content-Type'  => 'application/json',
+        ],
+        'body' => json_encode([
+            'model'   => 'dall-e-3',
+            'prompt'  => $prompt,
+            'n'       => 1,
+            'size'    => '1024x1024',
+            'quality' => 'standard',
+        ]),
+    ]);
+
+    if ( is_wp_error($response) ) {
+        return ['error' => 'Request failed: ' . $response->get_error_message()];
+    }
+
+    $body = json_decode(wp_remote_retrieve_body($response), true);
+
+    if ( isset($body['error']) ) {
+        return ['error' => 'OpenAI Error: ' . $body['error']['message']];
+    }
+
+    if ( isset($body['data'][0]['url']) ) {
+        return ['url' => $body['data'][0]['url']];
+    }
+
+    return ['error' => 'No image returned from OpenAI.'];
 }
 
 

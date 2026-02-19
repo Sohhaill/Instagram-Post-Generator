@@ -50,7 +50,27 @@ function ipg_enqueue_public_js() {
     ]);
 }
 add_action( 'wp_enqueue_scripts', 'ipg_enqueue_public_js' );
-add_action('admin_enqueue_scripts', 'ipg_enqueue_public_js'); 
+// ADMIN JS
+function ipg_enqueue_admin_js($hook) {
+
+    $js_path = plugin_dir_path(__FILE__) . 'admin/js/admin.js';
+    $js_url  = plugin_dir_url(__FILE__)  . 'admin/js/admin.js';
+
+    wp_enqueue_script(
+        'ipg-admin-script',
+        $js_url,
+        ['jquery'],
+        filemtime($js_path),
+        true
+    );
+
+    wp_localize_script('ipg-admin-script', 'ipg_ajax', [
+        'ajax_url' => admin_url('admin-ajax.php'),
+         'nonce'    => wp_create_nonce('ipg_ajax_nonce'),
+    ]);
+}
+add_action('admin_enqueue_scripts', 'ipg_enqueue_admin_js');
+
 
 
 /* ---------------------------
